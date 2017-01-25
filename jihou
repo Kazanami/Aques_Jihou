@@ -1,0 +1,89 @@
+#!/bin/bash
+#Value Set
+ConfigFile="./jihou_conf/jihou_setting.conf"
+Voice=`cat $ConfigFile | grep "Voice" | grep -v "#" | awk '{print $2}'`
+CMDNAME=`basename $0`
+Time_Hour=$(date +%k | tr -d ' ')
+#Record_LogFlag=`cat $ConfigFile | grep "Record_Log" | awk '{print $2*}'`
+#unset USER
+
+#Option Set
+Reimu(){
+	/opt/aquestalkpi/AquesTalkPi -v f1 -b "$1" | aplay
+}
+Marisa(){
+	/opt/aquestalkpi/AquesTalkPi -v f2 -b "$1" | aplay
+}
+
+#RecordLog(){
+#
+#}
+
+NowTime(){
+	case "$Voice" in
+		Reimu)
+			Reimu "今は$(date '+%Y年%_m月%d日%% %H時%M分')です。"
+		;;
+		Marisa)
+			Marisa "今は$(date '+%Y年%_m月%d日%% %H時%M分')です。"
+		;;
+	esac
+}
+
+ChangeConfig(){
+		Temp=`mktemp`
+		cat $ConfigFile >> $Temp
+		echo "Opening Config File..."
+		sudo nano ${Temp}
+		diff -q $ConfigFile $Temp >> /dev/null
+		if [ $? != 0 ];then
+			sudo cp $Temp $ConfigFile
+			if [ $? != 0 ];then
+				echo "[$(tput setaf 3)WARNING$(tput setaf 7)] File Can't Access!!"
+				return 1;
+				rm -rf $Temp
+			else
+#				echo "[...] Installing New Settings...\r";
+				echo "[$(tput setaf 2)SUCCESS$(tput setaf 7)] Installed New Setting."
+				return 0;
+				rm -rf $Temp
+			fi
+		else
+			echo "[$(tput setaf 6)INFO$(tput setaf 7)] Not Change."
+		fi
+		rm -rf $Temp
+}
+
+HourSay(){
+	Japanese=("いち" "に" "さん" "よ" "ご" "ろく" "しち" "はち" "く" "じゅう" "じゅういち" "じゅうに" "じゅうさん" "じゅうし" "じゅうご" "じゅうろく" "じゅうしち" "じゅうはち" "じゅうく" "にじゅう" "にじゅういち" "にじゅうに" "にじゅうさん" "れい");
+	JIHOU=${Japanese[$Time_Hour - 1]}
+	Yomiage="ポ、、、ポ、、、ポ、、、パアアアアン。アクエストガ${JIHOU}ジヲ、オツタエシマス";
+	case "$Voice" in
+		Reimu)
+			Reimu "$Yomiage"
+#			if [ $? != 0 ];then
+#				echo ""
+		;;
+		Marisa)
+			Marisa "$Yomiage"
+		;;
+	esac
+}	
+#Main
+case "$1" in
+	change)
+		ChangeConfig
+		;;
+	nowtime)
+		NowTime
+		;;
+	cron)
+		HourSay
+		;;
+	*)
+		echo "Usage: ${CMDNAME} {change|nowtime|cron}" >&2
+		exit 3
+		;;
+esac
+
+:
