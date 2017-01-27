@@ -1,6 +1,6 @@
 #!/bin/bash
 #Value Set
-ConfigFile="./jihou_conf/jihou_setting.conf"
+ConfigFile="./jihou/jihou_setting.conf"
 Voice=`cat $ConfigFile | grep "Voice" | grep -v "#" | awk '{print $2}'`
 CMDNAME=`basename $0`
 Time_Hour=$(date +%k | tr -d ' ')
